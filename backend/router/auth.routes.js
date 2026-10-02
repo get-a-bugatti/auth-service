@@ -1,48 +1,77 @@
 import express from "express";
 import passport from "passport";
 import { authController } from "../controllers/auth.controller.js";
+import {
+  generateOauthState,
+  verifyOauthState,
+} from "../utils/OauthStateHandler.js";
+import { authService } from "../services/auth.service.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 const router = express.Router();
 
+router.get("/google", (req, res, next) => {
+  const intent =
+    req.query.intent === "signup" ? "google-signup" : "google-login";
 
+  const state = generateOauthState(intent);
 
-router.get(
-  "/google", (req, res, next) => {
+  res.cookie("oauth_state", state, {
+    httpOnly: true,
+    sameSite: "lax",
+    maxAge: 10 * 60 * 1000, // 10 min
+  });
 
-    const intent = req.query.intent === "signup" ? "google-signup" : "google-login";
+  passport.authenticate(intent, { scope: ["email", "profile"] })(
+    req,
+    res,
+    next,
+  );
+});
 
-    req.session.oauthStrategy = intent;
+router.get("/google/callback", (req, res, next) => {
+  console.log("Oauth state cookie", req.cookies.oauth_state);
+  const { intent: strategyName } = verifyOauthState(req.cookies.oauth_state);
+  console.log("Session Oauth Strategy is : ", strategyName);
 
-    passport.authenticate(intent, { scope: ["email", "profile"] })(req, res, next);
-  }
-);
+  passport.authenticate(strategyName, async (err, user, info) => {
+    if (err) return next(err);
 
-// const errorsMap = {
-//   "email_not_found": "No email associated with this google account.",
-//   "user_exists_local": "User already exists in local.",
-//   "account_not_found": "No account found associated with this Google email."
-// }
+    if (!user) {
+      res.clearCookie("oauth_state");
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/${info?.redirectPage}?error=${encodeURIComponent(info?.name)}`,
+      );
+    }
 
-router.get(
-  "/google/callback",
-  (req, res, next) => {
-    const strategyName = req.session.oauthStrategy || "google-login";
-    
-    passport.authenticate(strategyName, (err, user, info) => {
-      if (err) return next(err);
-      
-      if (!user) { 
-        return res.redirect(`${process.env.FRONTEND_URL}/signup?error=${encodeURIComponent(info?.name)}`);
-      }
+    res.clearCookie("oauth_state");
 
-      // WAS HERE , yesterday night. Setting htis up is next.
+    // JWT lOGIC HERE.
+    const { accessToken, refreshToken } = await authService.generateTokens(
+      user._id,
+    );
+    const cookieOptions = {
+      secure: true,
+      httpOnly: true,
+      sameSite: "Strict",
+    };
 
-    })(req, res, next);
-  }
-);
+    if (!accessToken || !refreshToken) {
+      throw new Error("Couldn't genereate JWT tokens in the Oauth flow.");
+    }
+
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", refreshToken, cookieOptions)
+      .redirect(`${process.env.FRONTEND_URL}/users`);
+  })(req, res, next);
+});
 
 router.post("/signup", authController.register);
 router.post("/login", authController.login);
+
+router.get("/logout", authController.logout);
 
 router.post("/token", authController.refresh);
 

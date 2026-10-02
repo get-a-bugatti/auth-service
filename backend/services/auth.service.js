@@ -18,7 +18,6 @@ class AuthService {
       throw new ApiError(404, "User not found.");
     }
 
-    console.log("password being checked :", password);
 
     const isPasswordCorrect = await user.isPasswordCorrect(password);
 
@@ -48,13 +47,41 @@ class AuthService {
     }
 
     const newUser = await userRepository.createUser({
-      email,
-      username,
-      fullname,
-      password,
+      userData: {
+        email,
+        username,
+        fullname,
+        password,
+      },
+      mode: "local"
     });
 
     return { id: newUser._id };
+  }
+
+    async generateTokens(userId) {
+    try {
+      const user = await userRepository.findById(userId);
+
+      if (!user) {
+        throw new AppError(404, "User not found.");
+      }
+
+      const [accessToken, refreshToken] = await Promise.all([
+        user.generateAccessToken(),
+        user.generateRefreshToken(),
+      ]);
+
+      if (!accessToken || !refreshToken) {
+        throw new AppError(500, "Could not generate tokens.");
+      }
+
+      return { accessToken, refreshToken };
+    } catch (error) {
+      console.error("Error generating tokens:", error);
+      if (error instanceof AppError) throw error;
+      throw new AppError(500, "Error generating tokens");
+    }
   }
 
   async refreshTokens(incomingRefreshToken) {

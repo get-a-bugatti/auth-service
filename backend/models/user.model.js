@@ -58,11 +58,9 @@ userSchema.pre("save", async function () {
 
 userSchema.methods.isPasswordCorrect = async function (password) {
   if (!password || !this.password) {
-    console.error("isPasswordCorrectError : Password not provided.");
+    console.error("Error::isPasswordCorrect : Field missing.");
+    throw new Error("Password field is required.");
   }
-
-  console.log(password);
-  console.log(this.password);
 
   return await bcrypt.compare(password, this.password);
 };

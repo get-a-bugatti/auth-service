@@ -1,3 +1,6 @@
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { authService } from "../services/auth.service.js";
+
 class AuthController {
   #cookieOptions = {
     secure: true,
@@ -48,6 +51,13 @@ class AuthController {
       .cookie("refreshToken", refreshToken, this.#cookieOptions)
       .json(new ApiResponse(200, "Refreshed Tokens successfully."));
   };
+
+  logout = async (req, res) => {
+    return res.status(200)
+    .clearCookie("accessToken", this.#cookieOptions)
+    .clearCookie("refreshToken", this.#cookieOptions)
+    .json(new ApiResponse(200, "Cleared cookies successfully."));
+  }
 }
 
 export const authController = new AuthController();

@@ -22,8 +22,15 @@ class UserRepository {
     return await User.findById(id);
   }
 
-  async findByGoogleId(googleId) {
-    return await User.findOne({ googleId });
+  async findByGoogleAccount({
+    googleId, email
+  }) {
+    return await User.findOne(
+      {
+        googleId: googleId,
+        email: email.trim().toLowerCase()
+      }
+    );
   }
 
   async findByEmailOrUsername({ loginCredential, projections = "" }) {
@@ -38,6 +45,13 @@ class UserRepository {
     }).select(projections);
   }
 
+    async existsByEmail({ loginCredential, projections = "" }) {
+
+    return await User.findOne({
+      email: email.trim().toLowerCase()
+    });
+  }
+
   async existsByEmailOrUsername({ email, username }) {
     const user = await User.findOne({
       $or: [
@@ -48,14 +62,29 @@ class UserRepository {
     return !!user; // Returns a true/false boolean explicitly
   }
 
-  async createUser(userData) {
-    return await User.create({
-      ...userData,
-      email: userData.email.trim().toLowerCase(),
-      username: userData.username.trim().toLowerCase(),
-      fullname: userData.fullname.trim(),
-      password: userData.password.trim(),
-    });
+  async createUser({userData, mode}) {
+    let userObject;
+
+    if (mode === "local") {
+      userObject = {
+        email: userData.email?.trim().toLowerCase(),
+        username: userData.username?.trim().toLowerCase(),
+        fullname: userData.fullname?.trim(),
+        password: userData.password?.trim(),
+      }
+    } 
+    
+    if (mode === "google") {
+      userObject = {
+        googleId: userData.googleId,
+        authProvider: userData.authProvider,
+        email: userData.email?.trim().toLowerCase(),
+        username: userData.username?.trim().toLowerCase(),
+        fullname: userData.fullname?.trim(),
+      };
+    }
+
+    return await User.create(userObject);
   }
 }
 
