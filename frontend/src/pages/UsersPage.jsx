@@ -1,15 +1,11 @@
-import { Outlet, redirect } from "react-router-dom";
+import {  redirect } from "react-router-dom";
 import { useLoaderData } from "react-router-dom";
 import api from "../api/axios.js";
 
-export function AdminGuardLoader() {
+export async function UsersPageLoader() {
     return api.get("/api/v1/users/me")
         .then((response) => {
             if (response.status === 200) {
-                
-                if (response.data.data.role !== "admin") {
-                    return redirect("/");
-                }
                 
                 return response.data.data;
             }
@@ -29,13 +25,19 @@ export function AdminGuardLoader() {
 
 
 
-export default function AdminGuard() {
-    const adminProfile = useLoaderData();
+export default function UsersPage() {
+    const userProfile = useLoaderData();
+    console.log("UserProfile is ", userProfile);
+    const isAdmin = userProfile?.role === "admin";
 
-
-    if (adminProfile.role !== "admin") {
-        return <h1>Unauthorized</h1>;
+    function redirectToAdminPage() {
+        return redirect("/admin/users")
     }
 
-    return <Outlet context={{ adminProfile }} />; 
+
+
+    let displayElem = <h1>Hello {isAdmin ? "Admin" : "User"} {`${userProfile.username}`}</h1>;
+
+    return displayElem;
+
 }

@@ -4,13 +4,8 @@ import Input from "../components/Input";
 import { login as loginUser, logout as logoutUser } from "../store/authSlice.js";
 import { useDispatch } from "react-redux";
 import api from "../api/axios.js";
+import { oauthErrorsMap as errorsMap } from "../constants.js";
 
-const errorsMap = {
-  "session_expired": "Session expired. Please log in again.",
-  "invalid_credentials": "Invalid credentials. Please try again.",
-  "user_not_found": "User not found. Please try again.",
-  "oauth_login_failed": "OAuth login failed. Please try again."
-};
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -43,7 +38,7 @@ export default function Login() {
   }
 
   function handleLoginWithGoogle() {
-    window.location.href="http://localhost:8000/api/v1/auth/google";
+    window.location.href="http://localhost:8000/api/v1/auth/google?intent=login";
   }
 
   async function handleSubmit(e) {
@@ -62,7 +57,7 @@ export default function Login() {
 
       alert("Login successful!");
 
-      navigate("/");
+      navigate("/users");
   
     } catch (error) {
       dispatch(logoutUser());

@@ -1,8 +1,9 @@
 // Signup.jsx
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { redirect, useNavigate, useSearchParams } from "react-router-dom";
 import Input from "../components/Input";
 import api from "../api/axios.js";
+import { oauthErrorsMap as errorsMap } from "../constants.js";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -13,8 +14,17 @@ export default function Signup() {
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const [error, setError] = useState(null);
+
+   useEffect(() => {
+      let errorMessage = searchParams.get("error");
+      if (errorMessage && errorMessage in errorsMap) {
+        setError(errorsMap[errorMessage]);
+      }
+  
+    }, [searchParams]);
 
   function handleChange(e) {
     const { name, value} = e.target;
@@ -22,6 +32,10 @@ export default function Signup() {
       ...prev,
       [name]: value,
     }));
+  }
+
+  function handleSignupWithGoogle() {
+    window.location.href="http://localhost:8000/api/v1/auth/google?intent=signup";
   }
 
   async function handleSubmit(e) {
@@ -150,6 +164,14 @@ export default function Signup() {
             className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold transition"
           >
             {isLoading ? "Signing Up..." : "Sign Up"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSignupWithGoogle}
+            className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold transition"
+          >
+            Sign up with Google
           </button>
         </form>
       </div>

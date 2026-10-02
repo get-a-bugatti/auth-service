@@ -9,6 +9,7 @@ import { Provider } from 'react-redux'
 import store from './store/store.js'
 import AdminGuard, {AdminGuardLoader} from './pages/AdminGuard.jsx'
 import AdminUsersPage, {AdminUsersLoader} from './pages/AdminUsersPage.jsx'
+import UsersPage, { UsersPageLoader } from './pages/UsersPage.jsx'
 
 
 const router = createBrowserRouter(
@@ -25,6 +26,11 @@ const router = createBrowserRouter(
     {
       path: "/signup",
       element: <Signup />
+    },
+    {
+      path: "/users",
+      loader: UsersPageLoader,
+      element: <UsersPage />
     },
     {
       path: "/admin",
