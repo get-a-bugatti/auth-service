@@ -51,6 +51,7 @@ passport.use( 'google-signup',
 
         const existingGoogleAccount = await userRepository.findByGoogleAccount({googleId: profile.id, email: email});
 
+        // Already signed up with the google account.
         if (existingGoogleAccount) {
           return done(null, false, {
             name: "user_exists_google",
@@ -58,6 +59,7 @@ passport.use( 'google-signup',
           });
         }
 
+        // Email exists with a local account.
         const localConflict = await userRepository.existsByEmailOrUsername({
           email: profile.emails[0].value,
           username: profile.displayName,
