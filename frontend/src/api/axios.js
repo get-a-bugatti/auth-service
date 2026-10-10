@@ -36,7 +36,8 @@ api.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url.includes("/api/v1/auth/token")
+      !originalRequest.url.includes("/api/v1/auth/token") &&
+      !originalRequest.url.includes("/api/v1/auth/login")
     ) {
       originalRequest._retry = true;
 
@@ -68,6 +69,8 @@ api.interceptors.response.use(
           return Promise.reject(refreshTokenErr);
         });
     }
+
+    return Promise.reject(error);
   }
 );
 

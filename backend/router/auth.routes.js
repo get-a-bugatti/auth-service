@@ -6,6 +6,7 @@ import {
   verifyOauthState,
 } from "../utils/OauthStateHandler.js";
 import { authService } from "../services/auth.service.js";
+import { authRateLimiter } from "../middlewares/auth-rate-limiter.middleware.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const router = express.Router();
@@ -68,8 +69,8 @@ router.get("/google/callback", (req, res, next) => {
   })(req, res, next);
 });
 
-router.post("/signup", authController.register);
-router.post("/login", authController.login);
+router.post("/signup", authRateLimiter, authController.register);
+router.post("/login", authRateLimiter,  authController.login);
 
 router.get("/logout", authController.logout);
 

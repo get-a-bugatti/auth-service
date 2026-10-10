@@ -5,9 +5,9 @@ import { router as adminRouter } from "./router/admin.routes.js";
 import { router as authRouter } from "./router/auth.routes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import session from "express-session"
 import passport from "passport";
 import "./config/passport.js";
+
 
 const app = express();
 
@@ -21,25 +21,12 @@ app.use(
 app.use(cookieParser());
 
 app.use(express.static(path.join(import.meta.dirname, "public")));
-app.use(
-   session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            httpOnly: true,
-            secure: false,
-            sameSite: "lax",
-            maxAge: 24 * 60 * 60 * 1000, //24h
-        },
-    })
-)
+
 
 app.use(express.json({ limit: "16mb" }));
 app.use(express.urlencoded({ limit: "16mb", extended: true }));
 
 app.use(passport.initialize());
-app.use(passport.authenticate('session'));
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/admin", adminRouter);

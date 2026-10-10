@@ -49,8 +49,8 @@ export default function Login() {
     try {
       const response = await api.post("/api/v1/auth/login", formData);
   
-      if (!response.data.success) {
-        throw new Error(response.data.message);
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || "Login Failed.");
       }
       
       dispatch(loginUser(response.data.data));
@@ -61,13 +61,14 @@ export default function Login() {
   
     } catch (error) {
       dispatch(logoutUser());
+      
+      console.error("Login error details:", error);
 
       const message = 
         error.response?.data?.message || 
         error.message ||                 
         "An unexpected error occurred.";
 
-      console.error(error);
       setError(message);      
     } finally {
       setIsLoading(false); 
